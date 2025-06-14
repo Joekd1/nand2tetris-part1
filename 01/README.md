@@ -7,3 +7,8 @@
 - A gate is a physical device that implements a simple Boolean function.
 - Logic design : Finding the most efficient way to implement a logic gate from its specification. 
 - We use HDL (Hardware Desciption Language) to design and simulate the gates.
+
+### Not Gate:
+
+Given the rules of Boolean algebra : ` ~ a = ~ (a ^ t)` which is equivalent to a Nand(a, True)
+
