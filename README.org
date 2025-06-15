@@ -1,0 +1,280 @@
+#+title: Nand2Tetris : Building a Modern Computer From First Principles - Part 1 : Hardware
+
+* Motivation
+
+I found it satisfying to implement a mini-programming language in Racket as part of the [[https://www.coursera.org/learn/programming-languages-part-b][Programming Languages]] course. This motivated me to seek to understand computing at its most fundamental level. Nand2Tetris offers a practical learning experience that puts together different aspects of Computer Science. It is a hands-on journey from primitive gates to a fully functioning computer capable of running Tetris.
+
+In Part 1 we start from a primitive =Nand gate= and end with a working computer capable of executing =Hack= assembly instructions.
+
+* Applied Skills and Preparation
+
+** Mathematical Foundations
+
+- [X] Boolean logic and circuit design
+  - Converting between =Truth Tables= and =Boolean Expressions=
+  - Simplifying =Boolean Expressions= using Logical Equivalences
+  - Implementing optimized circuits from logical specifications
+  - *Sources:*
+    - Susanna Epp's *Discrete Mathematics with Applications* (5th Ed)
+
+** Programming Languages & Systems
+
+- [X] Programming languages and systems concepts
+  - Type systems and static analysis for program correctness
+  - Functional programming with =closures= and immutable data patterns
+  - =Test-Driven Development= and comprehensive =unit testing= methodologies
+  - Memory management concepts (=stack= vs =heap=)
+  - Systems programming with =ownership=, =borrowing=, and zero-cost abstractions (Rust)
+  - Modular program design and abstraction boundaries
+  - =Regular expressions= and pattern matching for text processing
+  - *Sources:*
+    - CS50: Introduction to Computer Science (Harvard) - [[https://cs50.harvard.edu/certificates/98a971a5-2c6f-4fb7-aa60-4286fb823955][Certificate]]
+    - University of Washington's Programming Languages:
+      - [[https://www.coursera.org/learn/programming-languages][Part A]]
+      - [[https://www.coursera.org/learn/programming-languages-part-b][Part B]]
+      - [[https://www.coursera.org/learn/programming-languages-part-c][Part C]]
+    - Mastering Regular Expressions by Jeffrey E. F. Friedl
+    - The Rust Programming Language book
+
+* Introduction and roadmap
+
+** The Hello World Iceberg
+
+The classic Hello World program is deceptively simple. But running it requires multiple levels of abstractions and interfaces: First of all, the code is just text that the computer doesn't understand. It needs to be parsed, its semantics determined and then we translate it to the low machine language of the target computer. The result will be machine language instructions. These instructions need to be realized by some /hardware architecture/. This architecture is in turn implemented using /elementary logic gates/. All these gates can be built from primitive gates like =Nand=.
+
+** Which Computer?
+
+Since we need a specific /hardware architecture/ to run any program, the question remains: which hardware architecture to choose? One choice is to build a widely-used computer architecture with an existing high-level language. But this would make the project subject to the changing trends of architectures and languages. This led to the decision to create the /Hack/ computer architecture and the =Jack= high-level language. This also has the benefit of simplicity, we get to learn the theoretical concepts and the concrete implementation that are common in even the industrial-scale architecture design, without being bogged down by the idiosyncracies of lard-scale complex design.
+
+** Roadmap
+
+The Nand to Tetris journey contains twelve hardware and software projects, six of which pertain to the hardware part:
+
+- Chapter 1: Starting from /Nand/ and building elementary logic gates
+- Chapter 2: Constructing an /Arithmetic Logic Unit/
+- Chapter 3: Constructing memory devices
+- Chapter 4: Introducing low-level machine language
+- Chapter 5: Building the /CPU/ and /RAM/
+- Chapter 6: Building an /assembler/
+
+* Project Implementation
+
+** Chapter 1: Boolean Logic
+
+*** Introduction and Roadmap
+
+Every digital device is built using elementary /logic gates/. Our starting point in this chapter is to start from /Nand/ and build:
+
+- Basic gates: Not, And, Or, and Xor
+- Multiplexer and Demultiplexer
+- 16-bit versions: Not16, And16, and so on.
+
+*** Core Concepts
+
+- One subset of logical operators can be used to express /any/ boolean function
+- ={And, Or, Not}= is one such subset
+- /And/ , /Or/ and /Not/ can in turn be implemented using /Nand/ making it our /universal gate/
+- Given a =truth table= we can construct the corresponding =boolean expression= and simplify it and then implement it using logical gates
+- We use HDL (Hardware Description Language) to create software representation of the chips logic
+- HDL allows us to plan, debug, test and optimize our chips before anything is committed to silicon
+
+*** Component Specification and Implementation
+
+**** Nand
+
+The starting point of our computer architecture is the /Nand/ gate which realizes the following Boolean function:
+
+| a | b | Nand(a,b) |
+|---+---+-----------|
+| 0 | 0 |         1 |
+| 0 | 1 |         1 |
+| 1 | 0 |         1 |
+| 1 | 1 |         0 |
+
+We can also use API style notation to describe the same function:
+
+#+begin_src
+
+Chip name: Nand
+Input: a, b
+Output: out
+Function: if ((a==1) and (b==1)) then out = 0, else out = 1
+
+#+end_src
+
+The API description is more concise and it specifies the chip's name, its inputs and outputs and the function that it performs. It will be used in the rest of this documentation.
+
+**** Not
+
+Also called an /inverter/. It realizes the following API:
+
+#+begin_src
+
+Chip name: Not
+Input: in
+Output: out
+Function: if (in==0) then out=1, else out=0
+
+#+end_src
+
+Given the rules of Boolean algebra: =~ a = ~ (a ^ t) => Nand(a, True)=
+
+**** And
+
+Realizes the following API:
+
+#+begin_src
+
+Chip name: And
+Input: a, b
+Output: out
+Function: if ((a==1) and (b==1)) then out=1, else out=0
+
+#+end_src
+
+=a ^ b = ~ (~ ( a ^ b )) => Not(Nand(a, b))=
+
+**** Or
+
+The /Or/ gate realizes the following function:
+
+#+begin_src
+
+Chip name: Or
+Input: a, b
+Output: out
+Function: if ((a==1) or (b==1)) then out=1, else out=0
+
+#+end_src
+
+According to De Morgan's Laws =a ∨ b = ~ ( ~ a ∧ ~ b)= which can be represented as =Not(And(Not(a), Not(b)))=.
+
+**** Xor
+
+The /Xor/ gate realizes the following function:
+
+#+begin_src
+
+Chip name: Xor
+Input: a, b
+Output: out
+Function: if (a != b) then out=1, else out=0
+
+#+end_src
+
+Xor can be represented in Boolean notation as: =(a V b) ^ ~ (a ^ b)= which can be represented as =And(Or(a,b), Not(And(a,b)))=
+
+**** Multiplexer
+
+A /multiplexer/ is a three-input gate. Two input bits /a/ and /b/ are interpreted as /data bits/ and a third input bit named /sel/ is a interpreted as a /selection bit/. It routes one of the /data bits/ to the /output/ based on the /selection bit/.
+
+Here is the API:
+
+#+begin_src
+
+Chip name: Mux
+Input: a, b, sel
+Output: out
+Function: if (sel==0) then out=a, else out=b
+
+#+end_src
+
+This logic can be noted as: =(~ sel ^ a) V (sel ^ b)=
+
+**** Demultiplexer
+
+It performs the opposite function of the /multiplexer/. It takes a single input and routes it to one of two possible outputs. It has this API:
+
+#+begin_src
+
+Chip name: DMux
+Input: in, sel
+Output: a, b
+Function: if (sel==0) then {a,b} = {in,0}, else {a,b} = {0,in}
+
+#+end_src
+
+We can see that /a/ will only be true if /sel/ is /false/ and /in/ is /true/, therefore : =a = ~self^in=. /b/ will only be true when /sel/ is /true and /in/ is true, therefore =b = sel^in=.
+
+**** Multi-bit Versions
+
+It's a simple matter of arranging the one-bit gates into n-bit arrays that operate on each bit separately. In this case we implement 16-bit version of the gates.
+
+***** Mistakes and Lessons Learned
+
+My first attempt was to copy the /implementation/ of each gate 16 times, which is unnecessarily complex. It is much more concise to use the gate already implemented directly. This enforced the distinction between =specification= and =implementation= that the book emphasizes. As we move to more complex chips, we can treat the previous chips as /black boxes/ and not worry about the details of how they are implemented.
+
+**** Multi-way variants
+
+Logic gates that operate on one or two inputs can be generalized to gates that operate on multiple inputs.
+The way to implement them is to try to express the logic of the multiple inputs a /fork/ of the logic of the gates already implemented. Since the logic is the same, we won't go into details for each chip.
+
+***** Or8Way
+
+/Or8Way/ the following API:
+
+#+begin_src
+
+Chip name: Or8Way
+Input: in[8]
+Output: out
+Function: out = Or(in[0], in[1], ..., in[7])
+
+#+end_src
+
+This can be implemented by using /Or/ for two inputs and then forking the output and using it as input for the next /Or/.
+
+The logic looks like this:
+
+#+begin_src
+
+    Or(a=in[0] , b=in[1] , out=out1);
+    Or(a=out1 , b=in[2] , out=out2);
+    Or(a=out2 , b=in[3] , out=out3);
+  ...
+
+#+end_src
+
+*Note:* The general logic is to express the Multi-way variant using a combination of the two-inputs variant.
+
+***** Multi-way/Multi-bit multiplexer
+
+/Mux4Way16/ has the following API:
+
+#+begin_src
+
+Chip name: Mux4Way16
+Input: a[16], b[16], c[16], d[16], sel[2]
+Output: out[16]
+Function: if (sel==00,01,10,11) then out=(a,b,c,d)
+
+#+end_src
+
+This can be implemented using this : =Mux16(Mux16(a,b),Mux16(c,d))=
+
+/Mux8Way16/ is implemented the same way.
+
+***** Multi-way demultiplexer
+
+/DMux4Way/ has the following API:
+
+#+begin_src
+
+Chip name: DMux4Way
+Input: in, sel[2]
+Output: a, b, c, d
+Function: if (sel==00) then {a,b,c,d} = {in,0,0,0} else
+if (sel==01) then {a,b,c,d} = {0,in,0,0} else
+if (sel==10) then {a,b,c,d} = {0,0,in,0} else
+if (sel==11) then {a,b,c,d} = {0,0,0,in}
+
+#+end_src
+
+To implement this, we first use a /DMux/ with =sel[1]= and then route the output to two other /DMux/ gates.
+
+/DMux8Way/ can be implemented in the same way.
+
+***** Mistakes and Lessons Learned
+
+In programming languages =Array[0]= will be the index of the left-most element of the array. But in /HDL/ =sel[0]= is the *least significant bit* so it's the rightmost bit in the binary representation.
+This led me to some confusion and headaches when implementing the /DMux/ multi-way variants.
