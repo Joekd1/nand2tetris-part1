@@ -12,3 +12,6 @@
 
 Given the rules of Boolean algebra : ` ~ a = ~ (a ^ t)` which is equivalent to a Nand(a, True)
 
+### And Gate:
+
+`a ^ b = ~ (~ ( a ^ b ))` which can be represented as Not(Nand(a, b))
