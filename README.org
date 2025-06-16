@@ -278,3 +278,45 @@ To implement this, we first use a /DMux/ with =sel[1]= and then route the output
 
 In programming languages =Array[0]= will be the index of the left-most element of the array. But in /HDL/ =sel[0]= is the *least significant bit* so it's the rightmost bit in the binary representation.
 This led me to some confusion and headaches when implementing the /DMux/ multi-way variants.
+
+** Chapter 2: Boolean Arithmetic
+
+*** Introduction and Roadmap
+
+Every general-purpose computer is required to perform arithmetic operations on signed integers. We'll start by developing logic gates that carry on /addition/ and /sign conversion/. The subsequent operations can be built using these two. In this chapter we will build:
+
+- Half-adder: designed to add two bits
+- Full-adder: designed to add three bits
+- Adder: designed to add two n-bit numbers
+- Incrementer: adds 1 to a given number
+- The Arithmetic Logic Unit (ALU): Computes a set of arithmetic operations
+
+*** Core Concepts
+
+- Inside computers, everything is represented using binary code
+- A pair of binary numbers can be added bitwise from right to left, while keeping track of the carry bit
+- Signed binary numbers can represented using the /two's complement/ method.
+
+  *Note:* For more information about the /two's complement/ method check: Susanna Epp's *Discrete Mathematics with Applications* (5th Ed) - Section 2.5 : /Application: Number Systems and Circuits for Addition/
+
+*** Component Specification and Implementation
+
+The half-adder computes the sum of two 1-bit inputs, producing a *sum* and a *carry*. It has the following API snf truth table:
+
+#+begin_src
+
+Chip name: HalfAdder
+Input: a, b
+Output: sum, carry
+Function: sum = LSB of a + b, carry = MSB of a + b
+
+#+end_src
+
+| a | b | sum | carry |
+|---|---|-----|-------|
+| 0 | 0 |  0  |   0   |
+| 0 | 1 |  1  |   0   |
+| 1 | 0 |  1  |   0   |
+| 1 | 1 |  0  |   1   |
+
+From the truth table we can see that the sum is logically equivalent to a /Xor/ gate, and the carry is logically equivalent to an /And/ gate.
