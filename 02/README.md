@@ -28,3 +28,6 @@ Addition is a binary operation, so in order to compute the sum of a, b and c we 
 
 More details about the entire process can be found in *Discrete Mathematics with Applications* by *Susanna Epp* (5th ed) pages 97 - 99
 
+## Adder16 :
+
+First try: Can be implemented with a half-adder for the first addition and full-adders for the rest. Will investigte if it can optimised.
