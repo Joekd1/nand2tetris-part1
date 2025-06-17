@@ -341,3 +341,18 @@ The /full-adder/ computes the sum of three 1-bit inputs, producing a sum and a c
 The /full-adder/ can be implemented with two /half-adders/ and an /Or/ gate.
 
 *Note:* For more information about the method of adding three bits see *Discrete Mathematics with Applications* (5th Ed) - Section 2.5 : /Application: Number Systems and Circuits for Addition/ - Page 97.
+
+**** Adder
+
+Integers are represented using a fixed word size like 8, 16, 32, or 64 bits. The addition of these n-bit numbers is realized using the /adder/ chip. It has the following API:
+
+#+begin_src
+
+Chip name: Add16
+Input: a[16], b[16]
+Output: out[16]
+Function: Adds two 16-bit numbers, the overflow bit is ignored.
+
+#+end_src
+
+The Adder16 proceeds bitwise, from right to left. In step 0 the least significant bits are added and the carry is fed to the next addition. The last overflow carry bit is ignored. This can be implemented with a half-adder for the first addition and full-adders for the rest.
