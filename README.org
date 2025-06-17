@@ -301,6 +301,8 @@ Every general-purpose computer is required to perform arithmetic operations on s
 
 *** Component Specification and Implementation
 
+**** Half-adder
+
 The half-adder computes the sum of two 1-bit inputs, producing a *sum* and a *carry*. It has the following API snf truth table:
 
 #+begin_src
@@ -320,3 +322,22 @@ Function: sum = LSB of a + b, carry = MSB of a + b
 | 1 | 1 |  0  |   1   |
 
 From the truth table we can see that the sum is logically equivalent to a /Xor/ gate, and the carry is logically equivalent to an /And/ gate.
+
+**** Full-adder
+
+The /full-adder/ computes the sum of three 1-bit inputs, producing a sum and a carry. It has the following truth table:
+
+| a | b | c | sum | carry |
+|---|---|---|-----|-------|
+| 0 | 0 | 0 |  0  |   0   |
+| 0 | 0 | 1 |  1  |   0   |
+| 0 | 1 | 0 |  1  |   0   |
+| 0 | 1 | 1 |  0  |   1   |
+| 1 | 0 | 0 |  1  |   0   |
+| 1 | 0 | 1 |  0  |   1   |
+| 1 | 1 | 0 |  0  |   1   |
+| 1 | 1 | 1 |  1  |   1   |
+
+The /full-adder/ can be implemented with two /half-adders/ and an /Or/ gate.
+
+*Note:* For more information about the method of adding three bits see *Discrete Mathematics with Applications* (5th Ed) - Section 2.5 : /Application: Number Systems and Circuits for Addition/ - Page 97.
