@@ -30,4 +30,7 @@ More details about the entire process can be found in *Discrete Mathematics with
 
 ## Adder16 :
 
+The Adder16 proceeds bitwise, from right to left. In step 0 the least significant bits are added and the carry is fed to the next addition. The last overflow carry bit is ignored.  
+
 First try: Can be implemented with a half-adder for the first addition and full-adders for the rest. Will investigte if it can optimised.
+Verdict: The implementation looks good. There's a question of whether to use a full-adder evem for the least significiant digits. I'll still use the half-adder as it seems clearer.
