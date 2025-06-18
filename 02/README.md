@@ -39,5 +39,7 @@ Verdict: The implementation looks good. There's a question of whether to use a f
 
 An incremeter takes a number and output that number + 1. It could be implemented with the general adder, but a dedicated gate is more optimal, since incrementing is a common operation. 
 
-First try: Can be implemented with half-adders. Is this the most optimal way?
+First try: Can be implemented with half-adders. Is this the most optimal way? 
+
+verdict: I think this is optimized enought for educational purposes. There might be a way to stop propagating the carry when the first 0 is encountered, since in addition a bit only flips when all other previous bits are 1. Howver, this might be a bit too complex to implement for now. I'll look into it later.
 
