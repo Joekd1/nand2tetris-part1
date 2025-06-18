@@ -356,3 +356,34 @@ Function: Adds two 16-bit numbers, the overflow bit is ignored.
 #+end_src
 
 The Adder16 proceeds bitwise, from right to left. In step 0 the least significant bits are added and the carry is fed to the next addition. The last overflow carry bit is ignored. This can be implemented with a half-adder for the first addition and full-adders for the rest.
+
+**** Incrementer
+
+An /Incrementer/ is a chip that adds 1 to a given number. It has the following API:
+
+#+begin_src
+
+Chip name: Inc16
+Input: in[16]
+Output: out[16]
+Function: out = in + 1
+
+#+end_src
+
+This can be realized using the previously designed /Add16/ chip. This can be done simply like this:
+
+#+begin_src
+
+CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    Add16(a=in, b[0]=true , b[1..15]=false, out=out);
+}
+
+#+end_src
+
+***** Mistakes and Lessons Learned
+
+I first implemented the /Inc16/ chip using 16 /half-adders/, which was overly complex. The lesson is to use an already implemented chip whenever possible and treat it as a black-box abstraction for implementing future chips.
