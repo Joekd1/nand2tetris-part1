@@ -43,3 +43,10 @@ First try: Can be implemented with half-adders. Is this the most optimal way?
 
 verdict: I think this is optimized enought for educational purposes. There might be a way to stop propagating the carry when the first 0 is encountered, since in addition a bit only flips when all other previous bits are 1. Howver, this might be a bit too complex to implement for now. I'll look into it later.
 
+### ALU:
+
+This chip is designed to compute a set of arithmetic operations. It takes a two 16-bit integers and depending on the value of six 1-bit control bits, performs a given operation. The general specification of the chip is already provided. 
+
+First try: I compute each operation using the specific gate and use Mux16 to select whether it is performed or not. Each output is then fed as the input of the next operation. 
+
+Gotchas: In order to output zr I needed to use *Or8way* gat. This requires splitting the output of the 16-bit into twp 8-bit parts. It's impossible to index or subscript internal pins in HDL. I used a work around that uses two Mux16 but output the lower and upper bits seperately. I have a "smell" that this is not the most optimal approach. There are perhaps way more Mux16 gates than required. Will investiaget this and see.
