@@ -387,3 +387,123 @@ CHIP Inc16 {
 ***** Mistakes and Lessons Learned
 
 I first implemented the /Inc16/ chip using 16 /half-adders/, which was overly complex. The lesson is to use an already implemented chip whenever possible and treat it as a black-box abstraction for implementing future chips.
+
+**** The Arithmetic Logic Unit
+
+Using the generic chips built until now, we now turn to constructing the /ALU/. This chip's design is specific to our /Nand to Tetris/ computer. The /ALU/ will be the centerpiece of the /CPU/ chip we'll construct in a later chapter. It has the following API:
+
+#+begin_src
+
+Chip name: ALU
+Input: x[16], y[16],  // 16-bit inputs
+       zx,             // zero the x input
+       nx,             // negate the x input
+       zy,             // zero the y input
+       ny,             // negate the y input
+       f,              // if f==1 then out=x+y else out=x&y
+       no              // negate the output
+Output: out[16],       // 16-bit output
+        zr,            // out == 0
+        ng             // out < 0
+Function:
+  if zx then x = 0      // zero the x input
+  if nx then x = !x     // negate the x input
+  if zy then y = 0      // zero the y input
+  if ny then y = !y     // negate the y input
+  if f==1 then out = x + y // integer addition
+         else out = x & y  // bitwise and
+  if no then out = !out // negate the output
+  zr = (out == 0)       // set if output is zero
+  ng = (out < 0)        // set if output is negative
+
+#+end_src
+
+Given two 16-bit inputs /x/ and /y/ and six /control bits/, the /ALU/ computes a set of eighteen arithmetic and logical operations as seen in the tables below:
+
+**ALU Control Bits:**
+
+| Control bit | Function                              |
+|-------------+---------------------------------------|
+| zx          | Zero the x input                      |
+| nx          | Negate the x input                    |
+| zy          | Zero the y input                      |
+| ny          | Negate the y input                    |
+| f           | Function select: 1 for add, 0 for AND |
+| no          | Negate the output                     |
+
+**ALU Operations:**
+
+| zx | nx | zy | ny | f | no | out |
+|----+----+----+----+---+----+-----|
+|  1 |  0 |  1 |  0 | 1 |  0 | 0   |
+|  1 |  1 |  1 |  1 | 1 |  1 | 1   |
+|  1 |  1 |  1 |  0 | 1 |  0 | -1  |
+|  0 |  0 |  1 |  1 | 0 |  0 | x   |
+|  1 |  1 |  0 |  0 | 0 |  0 | y   |
+|  0 |  0 |  1 |  1 | 0 |  1 | !x  |
+|  1 |  1 |  0 |  0 | 0 |  1 | !y  |
+|  0 |  0 |  1 |  1 | 1 |  1 | -x  |
+|  1 |  1 |  0 |  0 | 1 |  1 | -y  |
+|  0 |  1 |  1 |  1 | 1 |  1 | x+1 |
+|  1 |  1 |  0 |  1 | 1 |  1 | y+1 |
+|  0 |  0 |  1 |  1 | 1 |  0 | x-1 |
+|  1 |  1 |  0 |  0 | 1 |  0 | y-1 |
+|  0 |  0 |  0 |  0 | 1 |  0 | x+y |
+|  0 |  1 |  0 |  0 | 1 |  1 | x-y |
+|  0 |  0 |  0 |  1 | 1 |  1 | y-x |
+|  0 |  0 |  0 |  0 | 0 |  0 | x&y |
+|  0 |  1 |  0 |  1 | 0 |  1 | x\vert{}y |
+
+The operations are performed in order. For example if we want to compute the binary operation /27 - 1/ we proceed as follows:
+
+- We feed the 16-bit binary code for 27 to the x input
+- We set the /control bits/ to =001110=
+
+let's walk through the operations to demonstrate that /x - 1/ is indeed computed:
+
+- =zx = 0= and =nx = 0= => do nothing to /x/
+- =zy = 1= => zero the /y/ input (y = 0)
+- =ny = 1= => negate the /y/ input (y = -1)
+- =f = 1= => perform x + y
+- =no = 0= => don't negate the output
+
+So at the end this ends up computing x + (-1).
+
+*Implementation:*
+
+We use /Mux16/ and /Not16/ for zeroing and negating outputs. In case of /x/ we have:
+
+#+begin_src
+
+    Mux16(a=x , b=false , sel=zx , out=xZeroed );
+    Not16(in=xZeroed , out=xNegated );
+    Mux16(a=xZeroed , b=xNegated , sel=nx , out=xResult );
+
+#+end_src
+
+We use /Add16/ and /And16/ to compute f and /Mux16/ for selection and then we use /Not16/ to postprocess the output.
+
+#+begin_src
+
+    Add16(a =xResult , b =yResult , out =addXY );
+    And16(a=xResult , b=yResult , out=andXY );
+    Mux16(a=andXY , b=addXY , sel=f , out=preOut );
+
+    // postprocess output
+    Not16(in=preOut , out=invertedOut );
+
+#+end_src
+
+All that's left now is outputting /ng/ and /zr/ bits. /ng/ is the /MSB/ of the whole output, and /zr/ can be calculated using a multi-way /Or/ gate. Since we only have an /Or8Way/ gate, we split the 16-bit output into two 8-bit parts, and use /Or8Way/ on each part.
+
+#+begin_src
+
+    Mux16(a=preOut , b=invertedOut , sel=no ,out=out, out[15] = ng, out[0..7]=lowerout, out[8..15]=upperout);
+
+    // compute zr
+    Or8Way(in=lowerout , out=lowerOr );
+    Or8Way(in=upperout , out=upperOr );
+    Or(a=lowerOr , b=upperOr , out=fullOr );
+    Not(in=fullOr , out=zr );
+
+#+end_src
