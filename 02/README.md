@@ -49,4 +49,6 @@ This chip is designed to compute a set of arithmetic operations. It takes a two 
 
 First try: I compute each operation using the specific gate and use Mux16 to select whether it is performed or not. Each output is then fed as the input of the next operation. 
 
-Gotchas: In order to output zr I needed to use *Or8way* gat. This requires splitting the output of the 16-bit into twp 8-bit parts. It's impossible to index or subscript internal pins in HDL. I used a work around that uses two Mux16 but output the lower and upper bits seperately. I have a "smell" that this is not the most optimal approach. There are perhaps way more Mux16 gates than required. Will investiaget this and see.
+Gotchas: In order to output zr I needed to use *Or8way* gate. This requires splitting the output of the 16-bit into two 8-bit parts. It's impossible to index or subscript internal pins in HDL. I used a work around that uses two Mux16 but outputs the lower and upper bits seperately. I have a "smell" that this is not the most optimal approach. There are perhaps way more Mux16 gates than required. Will investiaget this and see. 
+
+Verdict: I used one Mux16 and routed the 8-bit parts, ng and the full output from it. I think it's sufficently optimized now. As the code gets more complex I am getting more careful with the naming, to make it more readable.
