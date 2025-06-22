@@ -280,7 +280,6 @@ In programming languages =Array[0]= will be the index of the left-most element o
 This led me to some confusion and headaches when implementing the /DMux/ multi-way variants.
 
 ** Chapter 2: Boolean Arithmetic
-
 *** Introduction and Roadmap
 
 Every general-purpose computer is required to perform arithmetic operations on signed integers. We'll start by developing logic gates that carry on /addition/ and /sign conversion/. The subsequent operations can be built using these two. In this chapter we will build:
@@ -506,4 +505,59 @@ All that's left now is outputting /ng/ and /zr/ bits. /ng/ is the /MSB/ of the w
     Or(a=lowerOr , b=upperOr , out=fullOr );
     Not(in=fullOr , out=zr );
 
+#+end_src
+
+** Chapter 3: Memory
+
+*** Introduction and Roadmap
+Every computer system needs to /store values over time/. The gates we implemented in previous chapters do not account for time and are referred to as =combinational chips=. In this chapter we will build a series of memory devices. These chips have the notion of a =clock cycle= and are referred to as =sequential chips=. They depend not only on the combination of their /inputs/ at a given time, but also on the /inputs/ and /outputs/ processed /previously/.
+
+We will build:
+- *Bit:* A single bit register
+- *Register:* A 16-bit register chip
+- *RAM:* A series of RAM devices with increasing number of registers
+- *Counter:* A memory device that increments its value in every time unit
+
+
+*** Core Concepts
+
+
+- In /sequential logic/ we need access to the /current/ inputs and the /previous/ inputs and outputs
+- This notion of /current/ and /previous/ imply a notion of time and the question of how to model it
+- Time is modeled using a /clock/ that generates an ongoing train of binary signals referred to as /tick/ and /tock/
+- The time between the beginning of a /tick/ and the end of a /tock/ is called a /cycle/
+- Our model of time will be discrete. We ignore continuous change and care about the state of the world only during successive cycles
+- The discrete model of time helps in ignoring the randomness of communication and synchronizing the operation of multiple chips.
+- These cycles are achieved with the help of the *clock* and lower level Data-flip flop (DFF) chip.
+- The duration of the clock cycle should be slightly longer than the most time consuming operation.
+- The clock signal, realized using a binary signal, is broadcasted to every memory chip.
+
+*** Component Specification and Implementation
+
+**** Data Flip-Flop (DFF)
+
+The /DFF/ is the most elementary sequential chip. It implements the simple time dependent behavior: =out(t) = in(t-1)=
+
+This time dependency is realized by feeding the /master clock/ input directly to all /DFF/ gates. These gates will emit the input fed to them at the next clock cycle. In /Nand to Tetris/ we treat the /DFFs/ as elementary builtin low-level parts embedded deep within other memory devices.
+
+**** Bit
+
+/Bit/ is a single-bit register with the following API:
+
+#+begin_src
+
+Chip name: Bit
+Input: in, load
+Output: out
+Function: If load(t) then out(t+1)=in(t) else out(t+1)=out(t)
+
+#+end_src
+
+The chip can store a single bit of information - 0 or 1 - over time. The /load/ input enables the register for writes. As long as the /load/ bit is not asserted the register is /latched/, maintaining its current state.
+
+This behavior can be implemented using a /DFF/ and a /Multiplexer/. The /load/ bit is fed directly to the /sel/ bit of the /Mux/. The output of the /DFF/ and the current input are fed directly to the /Mux/.
+
+#+begin_src
+    Mux(a=currentVal, b=in, sel=load, out=muxOut );
+    DFF(in=muxOut, out=currentVal, out=out );
 #+end_src
