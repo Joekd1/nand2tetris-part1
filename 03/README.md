@@ -12,6 +12,12 @@
 - Adding the dimension of time transforms our *classical logic* into *sequential logic*.
 - The family of memeory chips will be implemented gradually: DFF, Bit chip, Register chip, and successive RAM implementation of different sizes.
 
-### Bit :
+### Bit:
 
 The Bit chip is expected to remember and emit its state over time. This can be implemented using a DFF and a multiplexer, with the *load* bit of the multiplexer being fed to the *sel* bit of the chip. This has the effect of either outputting the *in* value or the *currentVal* fed previously by the DFF, depending on the *load* bit. 
+
+### Register:
+
+A register is an array of n-bits, 16-bits in our case.
+
+First try: It can be implemented by using the same load for the 16 Bit chips. Is this an efficient way?
