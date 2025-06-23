@@ -28,4 +28,6 @@ A *RAM8* chip features 8 registers. Each register can be selected using the RAM'
 
 First try: I use 8 registers with the same input, different loads, and different outputs. The output is selected suing a *Mux8way16* chip, developed in chapter 1. The load is directed to a specific register using a *Dmux8way* chip.
 
+Verdict: Reordered the code and renamed some variables to make it more readable. Other than that I don't see the need for any changes or optimizations.
+
 
