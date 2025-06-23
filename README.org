@@ -571,7 +571,7 @@ The /Register/ chip stores a 16-bit value and updates it based on the /load/ bit
 Chip name: Register (16-bit register)
 Input: in[16], load
 Output: out[16]
-Function: 
+Function:
   if load(t) then out(t+1) = in(t)
   else out(t+1) = out(t)
 
@@ -579,7 +579,7 @@ Function:
 
 This chip can be implemented as an array of 16 /Bit/ chips:
 
-#+begin_src 
+#+begin_src
 
     Bit(in=in[0], load=load, out=out[0]);
     Bit(in=in[1], load=load, out=out[1]);
@@ -587,3 +587,28 @@ This chip can be implemented as an array of 16 /Bit/ chips:
   ...
 
 #+end_src
+
+**** RAM
+
+A direct-access memory unit, also called /Random Access Memory/ is an aggregate of n /register/ chips. Each register can be selected and made available for read/write operations using an address between =0= and =n - 1=. This access time is /instantaneous/ and independent of the size of the /RAM/. Here is the API:
+
+#+begin_src
+
+Chip name: RAMn
+Input: in[16], load, address[k] (k = log₂n)
+Output: out[16]
+Function:
+Out emits the value stored at the memory location (register) specified by address.
+If load==1, then the memory location specified by address is set to the value of in.
+The loaded value will be emitted by out from the next time step onward.
+
+#+end_src
+
+***** RAM8
+
+As the name suggests, /RAM8/ is an aggregate of 8 /register/ chips. What we need to implement is the logic of selecting between these chips. This can be boiled down to two steps:
+
+1. Direct the /load/ bit to the register specified by *address*.
+   This can be achieved using the already implemented /Dmux8Way/
+2. Direct the output of the register selected to the output of the RAM8
+   This can be achieved using the already implemented /Mux8Way16/
