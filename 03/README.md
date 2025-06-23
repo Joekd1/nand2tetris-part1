@@ -21,3 +21,11 @@ The Bit chip is expected to remember and emit its state over time. This can be i
 A register is an array of n-bits, 16-bits in our case.
 
 First try: It can be implemented by using the same load for the 16 Bit chips. Is this an efficient way?
+
+### RAM8:
+
+A *RAM8* chip features 8 registers. Each register can be selected using the RAM's 3-bit input address. Reading an inpit means we select a register number *address* and pipe its output to the RAM's output. The act of writing means given an address and a load, we set the value of the reigster number *address* to *in*.
+
+First try: I use 8 registers with the same input, different loads, and different outputs. The output is selected suing a *Mux8way16* chip, developed in chapter 1. The load is directed to a specific register using a *Dmux8way* chip.
+
+
