@@ -30,4 +30,6 @@ First try: I use 8 registers with the same input, different loads, and different
 
 Verdict: Reordered the code and renamed some variables to make it more readable. Other than that I don't see the need for any changes or optimizations.
 
+### RAM64:
 
+A RAM64 chip is built using 8 RAM8 chips and a six-bit address selector. The design is similar to RAM8 but uses RAM8 instead of Registers.
