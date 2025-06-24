@@ -612,3 +612,33 @@ As the name suggests, /RAM8/ is an aggregate of 8 /register/ chips. What we need
    This can be achieved using the already implemented /Dmux8Way/
 2. Direct the output of the register selected to the output of the RAM8
    This can be achieved using the already implemented /Mux8Way16/
+
+
+***** RAM64
+
+/RAM64/ can be implemented as an aggregate of 8 /RAM8/ chips. The selection logic is basically the same. This time we split the /address/ into two:
+
+- =address[3..5]= is used for the selection logic between the 8 /RAM8/ chips:
+
+  #+begin_src
+
+    DMux8Way(in=load, sel=address[3..5], a=load1, b=load2, c=load3, d=load4, e=load5, f=load6, g=load7, h=load8);
+
+    .... // RAM8 chips
+
+    Mux8Way16(a=r1, b=r2, c=r3, d=r4, e=r5, f=r6, g=r7, h=r8, sel=address[3..5], out=out);
+
+  #+end_src
+
+- =address[0..2]= is used for the selection logic inside the selected /RAM8/ chip:
+
+  #+begin_src
+
+    ...
+
+    RAM8(in=in, load=load1, address=address[0..2], out=r1);
+    RAM8(in=in, load=load2, address=address[0..2], out=r2);
+
+    ...
+
+  #+end_src
