@@ -33,3 +33,7 @@ Verdict: Reordered the code and renamed some variables to make it more readable.
 ### RAM64:
 
 A RAM64 chip is built using 8 RAM8 chips and a six-bit address selector. The design is similar to RAM8 but uses RAM8 instead of Registers.
+
+### RAM512, RAM4k, RAM16k:
+
+These chips are implemented using the same design. Each RAM is implemented using the previous one and we use the xxx bit of the address to select the previously implemented RAM chip, passing the rest of the address for it to handle. Like the book mentions, this is such an elegant recustive design.
