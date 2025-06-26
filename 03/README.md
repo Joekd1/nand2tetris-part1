@@ -37,3 +37,12 @@ A RAM64 chip is built using 8 RAM8 chips and a six-bit address selector. The des
 ### RAM512, RAM4k, RAM16k:
 
 These chips are implemented using the same design. Each RAM is implemented using the previous one and we use the xxx bit of the address to select the previously implemented RAM chip, passing the rest of the address for it to handle. Like the book mentions, this is such an elegant recustive design.
+
+### PC : 
+
+A *progran counter* chip is similar to a *register* chip. It has a *load* moad which outputs the input, *reset* mode that resets the value to 0, and a *increment* mode that keeps incrementing the value of the chip each clock cycle.
+The order of priorities matter: Reset > Load > Increment.
+
+Implementation: This chip took me a while to figure out, due to a misunderstanding on my part. At first I thought that the chip will only account for cases where at most one control but is 1. But it turns out I have to just follow the priority and only check low priority control bits when the high priority one is zero. 
+
+I implemented this using a *register*, and *incrementer*, and a Mux8way16 to select the mode.
