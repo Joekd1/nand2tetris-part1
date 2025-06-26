@@ -650,7 +650,7 @@ As the name suggests, /RAM8/ is an aggregate of 8 /register/ chips. What we need
 
 /RAM16k/ can be implemented using 4 /RAM4k/ chips. This time we use a /Dmux4Way/ and /Mux4Way/ for selection:
 
-#+begin_src 
+#+begin_src
 
     DMux4Way(in=load , sel=address[12..13] , a=load1 , b=load2 , c=load3 , d=load4 );
 
@@ -660,5 +660,45 @@ As the name suggests, /RAM8/ is an aggregate of 8 /register/ chips. What we need
     RAM4K(in=in, load=load4, address=address[0..11], out=r4);
 
     Mux4Way16(a=r1 , b=r2 , c=r3 , d=r4 , sel=address[12..13] , out=out);
+
+#+end_src
+
+**** Counter
+
+The /program counter/ or /PC/ is a chip that knows how to increment its value by 1 each time unit. It has the following API:
+
+#+begin_src
+
+Chip name: PC
+Input: in[16], load, inc, reset
+Output: out[16]
+Function:
+  If reset(t) then out(t+1) = 0
+  Else if load(t) then out(t+1) = in(t)
+  Else if inc(t) then out(t+1) = out(t) + 1
+  Else out(t+1) = out(t)
+
+#+end_src
+
+
+Its interface is similar to the /register/ chip but it also has /inc/ and /reset/ control bits. When =inc == 1= the /counter/ increments its value every clock cycle. If we want to reset the counter we set the /reset/ bit. Setting the /load/ bit allows us to set the /PC/ to the value of /in/. The key behavior to keep in mind is the /order of priority/ of the control bits, which is =reset > load > inc=.
+
+To implement this we use three /Mux16/ chips that handle the selection priority logic with an /Inc16/ chip:
+
+#+begin_src
+
+    Inc16(in=regOut , out=incOut);
+
+    Mux16(a=regOut , b=incOut , sel=inc , out=incOrHold );
+    Mux16(a=incOrHold , b=in , sel=load , out=loadOrInc );
+    Mux16(a=loadOrInc , b=false , sel=reset , out=nextPC);
+
+#+end_src
+
+The /register/ can be made to always load the /nextPC/ since the logic is already taken care of. The output is then fed back to the first /Mux16/:
+
+#+begin_src
+
+    Register(in=nextPC , load=true , out=regOut, out=out);
 
 #+end_src
