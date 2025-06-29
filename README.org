@@ -702,3 +702,282 @@ The /register/ can be made to always load the /nextPC/ since the logic is alread
     Register(in=nextPC , load=true , out=regOut, out=out);
 
 #+end_src
+
+** Chapter 4: Machine Language
+
+*** Introduction and Roadmap
+
+Before we complete our /hardware platform/ we have to understand its purpose and its function. This chapter is devoted to the study of the *machine language* that our platform seeks to realize. This entails a detailed study of the /Hack/ language specification and how it relates to hardware, so the specification section is more expansive than in previous sections. At the end we will write two programs in /Hack assembly/:
+
+- *Mult.asm:* A program that computes the value of /R0/ and /R1/ and stores the value in /R2/
+- *Fill.asm:* A program that blackens the screen when the keyboard is pressed.
+
+*** Core Concepts and Hack Specification
+
+A machine language can be viewed as an agreed-upon formalism designed to manipulate a /memory/ using a /processor/ and a set of /registers/. Unlike high-level languages, machine language is tightly related to the low-level details of the target hardware.
+
+**** The Hack Machine Language
+
+/Hack/ is a 16-bit computer that follows the paradigm known as /Von Neumann/ architecture. Before introducing the /Hack/ language specification, let's begin with a conceptual description of the /Hack/ computer:
+
+***** Memory
+
+The /Hack/ platform uses two memory units: a /data memory/ and an /instruction memory/. The /data memory/ stores binary values that the computer manipulates. The /instruction memory/ stores program instructions. They are both 16-bit wide.
+
+The /data memory/ (RAM) is a read/write device. /Hack/ instructions can read data from and write data to selected /RAM/ registers. The selected RAM register is referred to as /M/. For example the instruction =M = 0= sets the selected RAM register to =0=.
+
+The /instruction memory/ (ROM) is a read-only device. There's always a value in the /address/ input of the instruction memory. We refer to it as the /current instruction/.
+
+***** Registers
+
+/Hack/ instructions are designed to manipulate three 16-bit registers:
+
+- /Data register (D):/ Its role is to store a 16-bit value
+- /Address register (A):/ It serves as both an address register and a data register
+- /Selected Memory register (M):/ Serves as an address register.
+
+***** Addressing
+
+The /Hack/ instruction =@xxx= sets the /A/ register to the value =xxx=. This has two sides effects:
+
+- It makes the RAM register whose address is =xxx= the selected memory register /M/
+- It makes the value of the /ROM/ register whose address is =xxx= the *selected instruction*
+
+=@xxx= sets the stage for two different scenarios: Manipulating the data of the selected register or doing something with the selected instruction. Let's look at an example:
+
+#+begin_src
+
+ // This sets the value of RAM[100] to 17
+
+  @17
+  D=A
+  @100
+  M=D
+
+#+end_src
+
+In the first pair of instructions, A functions as a /data/ register and in the second it serves as a /memory/ register.
+
+***** Branching
+
+By default the /Hack/ computer executes one instruction after another, but we can use a /jump instruction/ to select the instruction we want to execute next. For example to execute the instruction number 29 we do the following:
+
+#+begin_src
+
+  @29
+  0;JMP
+
+#+end_src
+
+Note that jumping can also be conditional. We'll introduce this in the specification.
+
+***** Variables
+
+The =xxx= in the /Hack/ instruction =@xxx= can either be a constant or a symbol. If the instruction is =@x= where =x= is a symbol bound to, say, =513=. Then the /A/ register is set to =513=. This gives the /Hack/ assembly language the ability to store variables:
+
+#+begin_src
+
+  // This code performs x=17
+  @17
+  D=A
+  @x
+  M=D
+
+#+end_src
+
+The /Hack/ language features built-in symbols that will be introduced later.
+
+***** Program example
+
+Before we introduce the full specification of the /Hack/ language. Let's just get a taste of the full syntax. This program computes the sum =1+2+3+...+N= where /N/ is stored in /RAM[0]/. The output is then stored in /RAM[1]/
+
+#+begin_src
+// File: Sum1toN.asm
+// Computes RAM[1]=1+2+3+...+RAM[0]
+// Usage: put a value>=1 in RAM[0]
+    // i = 1
+    @i
+    M=1
+    // sum = 0
+    @sum
+    M=0
+
+(LOOP)
+    // if (i > R0) goto STOP
+    @i
+    D=M
+    @R0
+    D=D-M
+    @STOP
+    D;JGT
+    // sum = sum + i
+    @sum
+    D=M
+    @i
+    D=D+M
+    @sum
+    M=D
+    // i = i + 1
+    @i
+    M=M+1
+    // goto LOOP
+    @LOOP
+    0;JMP
+
+(STOP)
+    // R1 = sum
+    @sum
+    D=M
+    @R1
+    M=D
+
+(END)
+    @END
+    0;JMP
+
+#+end_src
+
+***** The Hack Language Specification
+
+The /Hack/ machine language consists of two instruction types as shown in this table:
+
+*A-instruction:*
+
+Symbolic: @xxx (xxx is a decimal value ranging from 0 to 32767, or a symbol bound to such a decimal value)
+
+Binary: 0vvv vvvv vvvv vvvv
+
+*C-instruction:*
+
+Symbolic: dest = comp ; jump
+
+Binary: 111a cccccc ddd jjj
+
+*comp bits:*
+
+| comp (a=0) | comp (a=1) | c1 | c2 | c3 | c4 | c5 | c6 |
+|------------|------------|----|----|----|----|----|----|
+| 0          | 0          | 1  | 0  | 1  | 0  | 1  | 0  |
+| 1          | 1          | 1  | 1  | 1  | 1  | 1  | 1  |
+| -1         | -1         | 1  | 1  | 1  | 0  | 1  | 0  |
+| D          | D          | 0  | 0  | 1  | 1  | 0  | 0  |
+| A          | M          | 1  | 1  | 0  | 0  | 0  | 0  |
+| !D         | !D         | 0  | 0  | 1  | 1  | 0  | 1  |
+| !A         | !M         | 1  | 1  | 0  | 0  | 0  | 1  |
+| -D         | -D         | 0  | 0  | 1  | 1  | 1  | 1  |
+| -A         | -M         | 1  | 1  | 0  | 0  | 1  | 1  |
+| D+1        | D+1        | 0  | 1  | 1  | 1  | 1  | 1  |
+| A+1        | M+1        | 1  | 1  | 0  | 1  | 1  | 1  |
+| D-1        | D-1        | 0  | 0  | 1  | 1  | 1  | 0  |
+| A-1        | M-1        | 1  | 1  | 0  | 0  | 1  | 0  |
+| D+A        | D+M        | 0  | 0  | 0  | 0  | 1  | 0  |
+| D-A        | D-M        | 0  | 1  | 0  | 0  | 1  | 1  |
+| A-D        | M-D        | 0  | 0  | 0  | 1  | 1  | 1  |
+| D&A        | D&M        | 0  | 0  | 0  | 0  | 0  | 0  |
+| D\vert{}A  | D\vert{}M  | 0  | 1  | 0  | 1  | 0  | 1  |
+
+*dest bits:*
+
+| dest | d1 | d2 | d3 | effect                  |
+|------+----+----+----+-------------------------|
+| null |  0 |  0 |  0 | The value is not stored |
+| M    |  0 |  0 |  1 | RAM[A]                  |
+| D    |  0 |  1 |  0 | D reg                   |
+| MD   |  0 |  1 |  1 | RAM[A], D reg           |
+| A    |  1 |  0 |  0 | A reg                   |
+| AM   |  1 |  0 |  1 | A reg, RAM[A]           |
+| AD   |  1 |  1 |  0 | A reg, D register       |
+| AMD  |  1 |  1 |  1 | A reg, RAM[A], D reg    |
+
+*jump bits:*
+
+| jump | j1 | j2 | j3 | effect             |
+|------+----+----+----+--------------------|
+| null |  0 |  0 |  0 | No jump            |
+| JGT  |  0 |  0 |  1 | If comp > 0 jump   |
+| JEQ  |  0 |  1 |  0 | If comp = 0 jump   |
+| JGE  |  0 |  1 |  1 | If comp ≥ 0 jump   |
+| JLT  |  1 |  0 |  0 | If comp < 0 jump   |
+| JNE  |  1 |  0 |  1 | If comp ≠ 0 jump   |
+| JLE  |  1 |  1 |  0 | If comp ≤ 0 jump   |
+| JMP  |  1 |  1 |  1 | Unconditional Jump |
+
+****** A-instruction
+
+The A-instructions starts with an op-code of =0= and sets register A to a 15-bit value. This sets the stage for a subsequent instruction where /register A/ can function either as a data registers (loading a constant), a memory register (manipulating M). It can also set the stage for a /jump destination/.
+
+****** C-instruction
+
+The C-instruction answers three questions:
+- What to compute, which is an /ALU/ operation denoted /comp/
+- Where to store the computed value denoted as /dest/
+- What to do next, specified by /jump/
+
+
+******* Computation Specification (comp)
+
+As we've seen before, the /Hack ALU/ is designed to compute the output of a fixed set of functions on two 16-bit inputs. In the /Hack computer/ we will realize, the first /ALU/ input feeds from the /D/ register and the second feeds either from the /A/ or /M/ register (determined by the /a bit/). The computed function is thus specified by 7-bits: the /a bit/ and the six /c/ bits. The relevant functions are documented in the table above.
+
+To illustrate, suppose we want to compute =D-1= (we don't care for now about the /dest/ and /jump/). This will be achieved by : 111_0001110_000000.
+
+******* Destination Specification (dest)
+
+The /ALU/ output can be stored in zero, one, two, or three possible destinations.
+
+Suppose we want to increment the value of the memory register whose address is 7. This can be achieved with:
+
+#+begin_src
+
+0000000000000111    // @7
+1111110111011000    // DM = M + 1
+
+#+end_src
+
+******* Jump Directive (jump)
+
+The jump field of the C-instruction specifies what to do next. The default is to fetch and execute the next instruction. There are eight possible jump conditions as seen in the table above.
+
+******* Symbols
+
+There's a list of predefined symbols in the /Hack/ language:
+
+#+caption: Predefined Hack Symbols
+| Symbol | Address Range |
+|--------+---------------+
+| SP     |             0 |
+| LCL    |             1 |
+| ARG    |             2 |
+| THIS   |             3 |
+| THAT   |             4 |
+| R0–R15 |          0–15 |
+| SCREEN |         16384 |
+| KBD    |         24576 |
+
+Of note are the /input / output/ SCREEN and KBD symbols. Our /Hack/ computer can be connected to a screen and a keyboard. Both these devices interact with the computer platform through /memory maps/.
+
+Drawing pixels on the screen is done by writing binary values to the memory segment associated with the screen. The screen's content is represented by a /memory map/ stored in an /8k/ block of 16-bit words. Each row is represented by thirty-two consecutive 16-bit words. We can either read the content of the screen or manipulate the bits and write them back to the relevant memory section.
+
+Listening to the keyboard is done through reading the memory section associated with the keyboard. When a key is pressed on the keyboard, its 16-bit character code appears at /RAM[KBD]/
+
+
+*** Project
+
+**** Mult.asm:
+
+The input of the program are the values stored in R0 and R1. The program computes R0 * R1 and stores and value in R2.
+A way to achieve this is to initialize R2 to =0= and then perform =R0 + R2= /R1/ times. In this case /R1/ serves as the /count/ and we can simply decrement it each time we loop.
+
+
+***** Mistakes and lessons learned
+
+At first I declared a variable /n/ to serve as the count and used /prod/ to keep track of the product. These are unnecessary and we can just use the R registers themselves, which greatly simplifies the logic. While declaring variables seems to be the natural choice is high-level languages, writing assembly does require a shift in how we think about the logic of a program.
+
+#+caption: No need to declare new variables
+#+begin_src
+
+@n
+M=0
+@prod
+M=0
+
+#+end_src
