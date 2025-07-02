@@ -13,3 +13,7 @@
 The input of the program are the values stored in R0 and R1. The program computes R0 * R1 and stores and value in R2. 
 I solved this problem using addition in a loop. 
 
+### Fill.asm:
+
+The program runs an infinite loop that checks the value of @KBD and then blackens the entire screen when a key is pressed and whitens it otherwise.
+
