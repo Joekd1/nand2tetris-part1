@@ -981,3 +981,49 @@ M=0
 M=0
 
 #+end_src
+
+**** Fill.asm
+
+The program runs an infinite loop that checks the value of @KBD and then blackens the entire screen when key is continuously pressed and whitens it otherwise.
+
+To achieve this we use a /count/ variable to keep track of the current address. Then we jump to /(FILL)/ or /(EMPTY)/ depending on the value of /KBD/:
+
+#+begin_src
+	(LOOP)
+	// initialize count
+	@count
+	M=0
+
+	// Check if keyboard is pressed
+	@KBD
+	D=M
+	@FILL
+	D;JNE
+	@EMPTY
+	D;JEQ
+#+end_src
+
+Both the /(FILL)/ and the /(EMPTY)/ loops have similar logic. We go through every memory address starting from /SCREEN/ and ending with =SCREEN + 8192= and set them to =-1= in the case of /(FILL)/ and =0= in the case of /(EMPTY)/. Note that =8192= is the number of addresses between @SCREEN and @KBD: =24576 - 16384 = 8192=. We use our previously defined /count/ variable to darken/whiten =RAM[SCREEN + count]= while incrementing count each time until it reaches =8192=:
+
+#+begin_src
+	(FILL)
+	// If count == 8192 jump back to the loop
+	@count
+	D=M
+	@8192
+	D=D-A
+	@LOOP
+	D;JEQ
+
+	// Darken screen at RAM[SCREEN + COUNT]
+	@SCREEN
+	D=A
+	@count
+	A=D+M
+	M=-1
+
+	// Increment count
+	@count
+	M=M+1
+
+#+end_src
