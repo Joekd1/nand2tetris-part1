@@ -2,7 +2,7 @@
 
 ### Reading notes
 
-This is the part where everything com together. We use the chips built
+This is the part where everything comes together. We use the chips built
 in the previous chapter to construct the **entire Hack computer** step by step:
 
 - We build the memory chip which contains a *RAM16k*,
@@ -12,7 +12,7 @@ and built-in *Screen* and *Keyboard* chips.
 
 ### Memory
 
- The main chips in that constututes the *Memory* chip are : RAM16K, Screen memory
+ The main chips that constitutes the `Memory` chip are : RAM16K, Screen memory
  and Keyboard Memory.
 
 The design is inspired by the previous memory designs:
@@ -48,7 +48,7 @@ instructions. The main chips are the ALU, Aregister, Dregister and PC.
     - A `Mux16` chip selects between M or A and feeds it to the *ALU* along with
     the value stored in the D register.
     - `cccccc` encodes which functions will be executed by the *ALU*.
-    - These bits are fed directly to the sex *ALU* functions.
+    - These bits are fed directly to the six *ALU* functions.
     - `ddd` encodes where the value of the computation will be stored (A|D|M).
     - These bits are used to determine the *load* of the A register and D register.
     Additionlly, they determine the output *writeM*.
@@ -70,3 +70,16 @@ instructions. The main chips are the ALU, Aregister, Dregister and PC.
 **Notes** : There could be a better way to handle the jump logic.
 While my method works, It feels a little bit verbose.
 This was more challenging than the previous chips.
+
+### Computer
+
+The topmost `Computer.hdl!` can be realized using three chips:
+    - `ROM32K` instruction memory chip
+    - `Memory` chip built previously in this chapter
+    - `CPU` chip built in this chapter
+
+The summary of the design:
+    - THe `PC` chip feeds the `ROM32K` causing it to emit the `instruction`
+    - The `CPU` executes the `instruction` and may manipulate `Memory`
+    - The `CPU`figures out which instruction to fetch next and outputs in to `PC`
+    - The cycle starts again
