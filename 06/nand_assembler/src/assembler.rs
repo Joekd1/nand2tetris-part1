@@ -1,7 +1,12 @@
+use parser::Parser;
 use std::error::Error;
 use std::path::Path;
 
-pub struct Assembler;
+pub struct Assembler {
+    parser: Parser,
+}
+
+mod parser;
 
 impl Assembler {
     pub fn build(mut args: impl Iterator<Item = String>) -> Result<Self, Box<dyn Error>> {
@@ -19,6 +24,8 @@ impl Assembler {
                 .ok_or("Wrong file extension")
         })?;
 
-        Ok(Assembler)
+        let parser = Parser::build(&file_path)?;
+
+        Ok(Assembler { parser })
     }
 }
