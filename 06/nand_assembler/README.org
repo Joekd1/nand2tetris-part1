@@ -1,0 +1,55 @@
+#+title: Project 6: The Assembler
+
+* Structure and planning
+
+- *main.rs:* Instantiates the Assembler, runs it and handles top level errors.
+- *assembler.rs:* Drives the assembly process using the =Parser= and =Code= modules.
+- *Parser.rs:* Reads the input file and offers a convenient way to skip through the comments and bank lines, breaking instructions into their main components.
+- *Code.rs:* Translates symbolic Hack mnemonics into their binary codes.
+
+* Assembler.rs
+
+The assembler crate defines the =Assembler= struct with the following fields:
+
+- parser: Contains an instance of the Parser.
+
+It also defines these methods:
+
+** build
+
+Creating an intance of the =Assembler= involves reading an env variable for the source file, and checking if the file exists.
+This opration can fail for a variety of reasons (For example file not existing or wrong extension), so the method returns a =Result= with a =Box<dyn Error>= variant. The error is propagated and handled in =main.rs= where we exist the program when an Error variant is encountered. There's no reason to continue if we can't sucessfully create an instance of the Assembler.
+
+* Parser.rs
+
+The assembler crate defines the =Parser= struct with the following fields:
+
+- contents: A vec of Strings that contain the contents of the source file.
+- file_index = Keeps track of our position in the file.
+  
+
+The Parser also defines these methods:
+
+** build
+
+Returns an instance of the =Parser=. Note that using a functional style with closures is much more efficient.
+We are returning a =Result= for the same reasons the =Assembler= returns a =Result=.
+
+#+begin_src rust
+  
+  let contents: Vec<_> = contents
+      .lines()
+      .map(|s| s.trim().to_string())
+      .collect();
+
+#+end_src
+
+
+
+
+
+
+  
+  
+
+  
