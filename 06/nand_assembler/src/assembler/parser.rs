@@ -27,7 +27,6 @@ impl Parser {
         // checks if there are still lines
         self.contents.len() as i32 > (self.file_index + 1)
     }
-}
 
     pub fn advance(&mut self) -> Result<(), Box<dyn Error>> {
         self.has_more_lines()
@@ -41,6 +40,13 @@ impl Parser {
 
         Ok(())
     }
+
+    pub fn get_instruction(&self) -> Option<&str> {
+        self.contents
+            .get(self.current_line as usize)
+            .map(|s| s.as_str())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -169,5 +175,65 @@ mod tests {
 
         //Assert
         assert_eq!(err.to_string(), "You reached the end of the file");
+    }
+
+    #[test]
+    fn get_instruction_before_advance_is_none() {
+        // Arrange
+        let ctx = setup();
+
+        // Assert
+        assert_eq!(ctx.default.get_instruction(), None);
+    }
+
+    #[test]
+    fn get_instruction_before_valid_instruction_is_none() {
+        // Arrange
+        let mut ctx = setup();
+
+	//Apply
+        ctx.default_with_comments.advance().expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.default_with_comments.get_instruction(), None);
+    }
+
+    #[test]
+    fn get_instruction_does_not_change_after_comments() {
+        // Arrange
+        let mut ctx = setup();
+
+	//Apply
+        ctx.default_with_comments.advance().expect("Error while calling advance");
+        ctx.default_with_comments.advance().expect("Error while calling advance");
+        ctx.default_with_comments.advance().expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.default_with_comments.get_instruction(), Some("A"));
+    }
+
+    #[test]
+    fn get_instruction_gets_first_instruction() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.default.advance().expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.default.get_instruction(), Some("@A"));
+    }
+
+    #[test]
+    fn get_instruction_gets_second_instruction() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.default.advance().expect("Error while calling advance");
+        ctx.default.advance().expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.default.get_instruction(), Some("@D"));
     }
 }
