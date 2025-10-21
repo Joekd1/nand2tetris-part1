@@ -5,6 +5,7 @@
 - *main.rs:* Instantiates the Assembler, runs it and handles top level errors.
 - *assembler.rs:* Drives the assembly process using the =Parser= and =Code= modules.
 - *Parser.rs:* Reads the input file and offers a convenient way to skip through the comments and bank lines, breaking instructions into their main components.
+- *instruction.rs:* Keeps track of the current instruction.
 - *Code.rs:* Translates symbolic Hack mnemonics into their binary codes.
 
 * Assembler.rs
@@ -27,6 +28,7 @@ The assembler crate defines the =Parser= struct with the following fields:
 - contents: A vec of Strings that contains the contents of the source file.
 - file_index: Keeps track of our position in the file.
 - current_line: Keeps track of instruction lines. For now it just skips comments and empty lines. 
+- instruction: Holds an instance of the Instruction type, This type will later hold other fields related to instructions.
  
 The Parser also defines these methods:
 
@@ -50,11 +52,16 @@ Returns true if there are more lines in the file. Initially it should return =fa
 
 ** advance
 
-If has_more_lines is false then we have nothing more to do, we return an Error. Otherwise, we increment our position in the file and if it's a valid instruction (for now it's just any line that is not empty and is not a comment) we increment =current_line=.
+If has_more_lines is false then we have nothing more to do, we return an Error. Otherwise, we increment our position in the file and if it's a valid instruction (for now it's just any line that is not empty and is not a comment) we increment =current_line= and update =instruction.current=.
 
-** get_instruction
+* instruction.rs
 
-Returns the current valid instruction by using =current_line=. The initial instruction returns None and is updated when a valid instruction if encountered. It doesn't change in case of a comment or empty line.
+Keeps track of the current instruction. It implements these methods:
+
+** new
+
+Constructs an instance of the =Instruction= struct.
+
 
 
 

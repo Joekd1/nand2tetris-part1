@@ -1,10 +1,14 @@
+use instruction::Instruction;
 use std::error::Error;
 use std::fs;
+
+mod instruction;
 
 pub struct Parser {
     pub contents: Vec<String>,
     pub file_index: i32,
     pub current_line: i32,
+    pub instruction: Instruction,
 }
 
 impl Parser {
@@ -15,11 +19,13 @@ impl Parser {
 
         let file_index = -1;
         let current_line = -1;
+        let instruction = Instruction::new();
 
         Ok(Self {
             contents,
             file_index,
             current_line,
+            instruction,
         })
     }
 
@@ -36,15 +42,12 @@ impl Parser {
             })
             .ok_or_else(|| Box::<dyn Error>::from("You reached the end of the file"))?
             .filter(|i| !i.is_empty() && !i.starts_with("//"))
-            .map(|_| self.current_line += 1);
+            .map(|valid_instruction| {
+                self.current_line += 1;
+                self.instruction.current = Some(valid_instruction.clone())
+            });
 
         Ok(())
-    }
-
-    pub fn get_instruction(&self) -> Option<&str> {
-        self.contents
-            .get(self.current_line as usize)
-            .map(|s| s.as_str())
     }
 }
 
@@ -77,18 +80,26 @@ mod tests {
                 contents,
                 file_index,
                 current_line,
+                instruction: Instruction::new(),
             },
 
             default: Parser {
                 contents: vec!["@A".to_string(), "@D".to_string()],
                 current_line,
                 file_index,
+                instruction: Instruction::new(),
             },
 
             default_with_comments: Parser {
-                contents: vec!["//Comment".to_string(), "@A".to_string(), "//Comment".to_string(), "@D".to_string()],
+                contents: vec![
+                    "//Comment".to_string(),
+                    "@A".to_string(),
+                    "//Comment".to_string(),
+                    "@D".to_string(),
+                ],
                 current_line,
                 file_index,
+                instruction: Instruction::new(),
             },
         }
     }
@@ -178,42 +189,53 @@ mod tests {
     }
 
     #[test]
-    fn get_instruction_before_advance_is_none() {
+    fn current_instruction_before_advance_is_none() {
         // Arrange
         let ctx = setup();
 
         // Assert
-        assert_eq!(ctx.default.get_instruction(), None);
+        assert_eq!(ctx.default.instruction.current, None);
     }
 
     #[test]
-    fn get_instruction_before_valid_instruction_is_none() {
+    fn current_instruction_before_valid_instruction_is_none() {
         // Arrange
         let mut ctx = setup();
 
-	//Apply
-        ctx.default_with_comments.advance().expect("Error while calling advance");
+        //Apply
+        ctx.default_with_comments
+            .advance()
+            .expect("Error while calling advance");
 
         // Assert
-        assert_eq!(ctx.default_with_comments.get_instruction(), None);
+        assert_eq!(ctx.default_with_comments.instruction.current, None);
     }
 
     #[test]
-    fn get_instruction_does_not_change_after_comments() {
+    fn current_instruction_does_not_change_after_comments() {
         // Arrange
         let mut ctx = setup();
 
-	//Apply
-        ctx.default_with_comments.advance().expect("Error while calling advance");
-        ctx.default_with_comments.advance().expect("Error while calling advance");
-        ctx.default_with_comments.advance().expect("Error while calling advance");
+        //Apply
+        ctx.default_with_comments
+            .advance()
+            .expect("Error while calling advance");
+        ctx.default_with_comments
+            .advance()
+            .expect("Error while calling advance");
+        ctx.default_with_comments
+            .advance()
+            .expect("Error while calling advance");
 
         // Assert
-        assert_eq!(ctx.default_with_comments.get_instruction(), Some("A"));
+        assert_eq!(
+            ctx.default_with_comments.instruction.current,
+            Some("@A".to_string())
+        );
     }
 
     #[test]
-    fn get_instruction_gets_first_instruction() {
+    fn current_instruction_gets_first_instruction() {
         // Arrange
         let mut ctx = setup();
 
@@ -221,11 +243,11 @@ mod tests {
         ctx.default.advance().expect("Error while calling advance");
 
         // Assert
-        assert_eq!(ctx.default.get_instruction(), Some("@A"));
+        assert_eq!(ctx.default.instruction.current, Some("@A".to_string()));
     }
 
     #[test]
-    fn get_instruction_gets_second_instruction() {
+    fn current_instruction_gets_second_instruction() {
         // Arrange
         let mut ctx = setup();
 
@@ -234,6 +256,6 @@ mod tests {
         ctx.default.advance().expect("Error while calling advance");
 
         // Assert
-        assert_eq!(ctx.default.get_instruction(), Some("@D"));
+        assert_eq!(ctx.default.instruction.current, Some("@D".to_string()));
     }
 }
