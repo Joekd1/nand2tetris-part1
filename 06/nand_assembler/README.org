@@ -5,7 +5,7 @@
 - *main.rs:* Instantiates the Assembler, runs it and handles top level errors.
 - *assembler.rs:* Drives the assembly process using the =Parser= and =Code= modules.
 - *Parser.rs:* Reads the input file and offers a convenient way to skip through the comments and bank lines, breaking instructions into their main components.
-- *instruction.rs:* Keeps track of the current instruction.
+- *instruction.rs:* Keeps track of the current instruction and the parsing Regex.
 - *Code.rs:* Translates symbolic Hack mnemonics into their binary codes.
 
 * Assembler.rs
@@ -54,22 +54,30 @@ Returns true if there are more lines in the file. Initially it should return =fa
 
 If has_more_lines is false then we have nothing more to do, we return an Error. Otherwise, we increment our position in the file and if it's a valid instruction (for now it's just any line that is not empty and is not a comment) we increment =current_line= and update =instruction.current=.
 
+
+** instruction_type
+
+Returns the type of the current valid instruction. I opted for using =and_then= on the =current_instruction= option. This makes it much easier than having to check for a Some variant of =current_instruction= for each if statement. Note that we have to use =as_ref()= here to avoid moving the string out of the =Option= and into the Closure.
+
+#+begin_src rust
+
+  pub fn instruction_type(&self) -> Option<InstructionType> {
+      self.instruction.current.as_ref().and_then(|current| {
+  	// The match logic gets here
+      })
+
+#+end_src
+
+I am using the =Regex= crate for using Regex to match an instruction to an instruction type. The Regex also contain capture groups that will be used later to extract specific parts of the instruction.
+
 * instruction.rs
 
-Keeps track of the current instruction. It implements these methods:
+Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
 
+- current: holds the current instruction.
+- regex: contains an instance of =InstructionRegex= for determining the instruction type and extracting the different mnemonics.
+
+=Instrcution= implements only a simple constructor method:
 ** new
 
 Constructs an instance of the =Instruction= struct.
-
-
-
-
-
-
-
-
-  
-  
-
-  
