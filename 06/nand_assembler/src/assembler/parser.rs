@@ -1,4 +1,4 @@
-use instruction::Instruction;
+use instruction::{Instruction, InstructionType};
 use std::error::Error;
 use std::fs;
 
@@ -49,6 +49,20 @@ impl Parser {
 
         Ok(())
     }
+
+    pub fn instruction_type(&self) -> Option<InstructionType> {
+        self.instruction.current.as_ref().and_then(|current| {
+            if self.instruction.regex.reg_a.is_match(current) {
+                Some(InstructionType::AInstruction)
+            } else if self.instruction.regex.reg_c.is_match(current) {
+                Some(InstructionType::CInstruction)
+            } else if self.instruction.regex.reg_l.is_match(current) {
+                Some(InstructionType::LInstruction)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 #[cfg(test)]
@@ -60,6 +74,9 @@ mod tests {
         empty: Parser,
         default: Parser,
         default_with_comments: Parser,
+        a_inst_parser: Parser,
+        c_inst_parser: Parser,
+        l_inst_parser: Parser,
     }
 
     impl Drop for TestContext {
@@ -99,6 +116,42 @@ mod tests {
                 ],
                 current_line,
                 file_index,
+                instruction: Instruction::new(),
+            },
+
+            a_inst_parser: Parser {
+                contents: vec![
+                    "@D".to_string(),
+                    "@123".to_string(),
+                    "@abc".to_string(),
+                    "@y".to_string(),
+                ],
+                file_index,
+                current_line,
+                instruction: Instruction::new(),
+            },
+
+            c_inst_parser: Parser {
+                contents: vec![
+                    "D=M-D".to_string(),
+                    "D=M".to_string(),
+                    "0;JMP".to_string(),
+                    "MD=D+M".to_string(),
+                    "D;JNEQ".to_string(),
+                ],
+                file_index,
+                current_line,
+                instruction: Instruction::new(),
+            },
+
+            l_inst_parser: Parser {
+                contents: vec![
+                    "(123)".to_string(),
+                    "(LOOP)".to_string(),
+                    "(END)".to_string(),
+                ],
+                file_index,
+                current_line,
                 instruction: Instruction::new(),
             },
         }
@@ -257,5 +310,198 @@ mod tests {
 
         // Assert
         assert_eq!(ctx.default.instruction.current, Some("@D".to_string()));
+    }
+
+    #[test]
+    fn instruction_type_before_advance_returns_none() {
+        // Arrange
+        let ctx = setup();
+
+        // Assert
+        assert!(ctx.default.instruction_type().is_none());
+    }
+
+    #[test]
+    fn instruction_type_returns_a_instruction_for_first_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.a_inst_parser.instruction_type(),
+            Some(InstructionType::AInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_a_instruction_for_second_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.a_inst_parser.instruction_type(),
+            Some(InstructionType::AInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_a_instruction_for_third_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.a_inst_parser.instruction_type(),
+            Some(InstructionType::AInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_c_instruction_for_first_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.c_inst_parser.instruction_type(),
+            Some(InstructionType::CInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_c_instruction_for_second_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.c_inst_parser.instruction_type(),
+            Some(InstructionType::CInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_c_instruction_for_third_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.c_inst_parser.instruction_type(),
+            Some(InstructionType::CInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_l_instruction_for_first_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.l_inst_parser.instruction_type(),
+            Some(InstructionType::LInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_l_instruction_for_second_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert!(matches!(
+            ctx.l_inst_parser.instruction_type(),
+            Some(InstructionType::LInstruction)
+        ));
+    }
+
+    #[test]
+    fn instruction_type_returns_l_instruction_for_third_call() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        println!(
+            "Expected LInstruction got : {:?}",
+            ctx.l_inst_parser.instruction_type()
+        );
+        assert!(matches!(
+            ctx.l_inst_parser.instruction_type(),
+            Some(InstructionType::LInstruction)
+        ));
     }
 }
