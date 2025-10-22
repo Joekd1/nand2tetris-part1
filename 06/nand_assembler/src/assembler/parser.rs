@@ -63,6 +63,21 @@ impl Parser {
             }
         })
     }
+
+    pub fn symbol(&self) -> Option<&str> {
+        self.instruction.current.as_ref().and_then(|current_inst| {
+            let regex = match self.instruction_type() {
+                Some(InstructionType::AInstruction) => &self.instruction.regex.reg_a,
+                Some(InstructionType::LInstruction) => &self.instruction.regex.reg_l,
+                _ => return None,
+            };
+
+            regex
+                .captures(current_inst)
+                .and_then(|caps| caps.get(1))
+                .map(|m| m.as_str())
+        })
+    }
 }
 
 #[cfg(test)]
@@ -503,5 +518,126 @@ mod tests {
             ctx.l_inst_parser.instruction_type(),
             Some(InstructionType::LInstruction)
         ));
+    }
+
+    #[test]
+    fn symbol_before_advance_returns_none() {
+        // Arrange
+        let ctx = setup();
+
+        // Assert
+        assert!(ctx.a_inst_parser.symbol().is_none());
+    }
+
+    #[test]
+    fn symbol_retruns_a_instruction_for_one_letter_symbol() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.a_inst_parser.symbol(), Some("D"))
+    }
+
+    #[test]
+    fn symbol_retruns_a_instruction_for_multiple_digit_symbol() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.a_inst_parser.symbol(), Some("123"));
+    }
+
+    #[test]
+    fn symbol_a_instruction_for_variable_name() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.a_inst_parser.symbol(), Some("abc"));
+    }
+
+    #[test]
+    fn symbol_retruns_a_instruction_for_one_letter_variable_name() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.a_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.a_inst_parser.symbol(), Some("y"))
+    }
+
+    #[test]
+    fn symbol_retruns_l_instruction_for_first_symbol() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.l_inst_parser.symbol(), Some("123"));
+    }
+
+    #[test]
+    fn symbol_retruns_l_instruction_for_second_symbol() {
+        // Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.l_inst_parser.symbol(), Some("LOOP"));
     }
 }
