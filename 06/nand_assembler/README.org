@@ -70,6 +70,48 @@ Returns the type of the current valid instruction. I opted for using =and_then= 
 
 I am using the =Regex= crate for using Regex to match an instruction to an instruction type. The Regex also contain capture groups that will be used later to extract specific parts of the instruction.
 
+** symbol
+
+If the current instruction is an A instruction of the type @xxx or an L instruction (xxx) we return xxx. This is done by using Regex and capture groups.
+
+We first use =and_then= to extract a reference to the current instruction:
+
+#+begin_src rust
+  self.instruction.current.as_ref().and_then(|current_inst| {
+      // The extraction logic goes here
+  }
+  )
+#+end_src
+
+Extracting a capture group is done by calling captures on the regular expression and passing the =current_instruction= to it.
+Since there are different regular expressions depending if it's an A or L instruction, we first extract the regex:
+
+
+#+begin_src rust
+  // ...
+
+   let regex = match self.instruction_type() {
+       Some(InstructionType::AInstruction) => &self.instruction.regex.reg_a,
+       Some(InstructionType::LInstruction) => &self.instruction.regex.reg_l,
+       _ => return None,
+   };
+
+  //..
+
+#+end_src
+
+
+We can then call captures on =regex= and extract the symbol:
+
+#+begin_src rust
+
+  regex
+      .captures(current_inst)
+      .and_then(|caps| caps.get(1))
+      .map(|m| m.as_str())
+
+#+end_src
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
@@ -78,6 +120,7 @@ Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= h
 - regex: contains an instance of =InstructionRegex= for determining the instruction type and extracting the different mnemonics.
 
 =Instrcution= implements only a simple constructor method:
+
 ** new
 
 Constructs an instance of the =Instruction= struct.
