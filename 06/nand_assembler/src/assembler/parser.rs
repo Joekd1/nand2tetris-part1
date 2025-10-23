@@ -78,6 +78,25 @@ impl Parser {
                 .map(|m| m.as_str())
         })
     }
+
+    pub fn dest(&self) -> Option<&str> {
+        self.capture_c_instruction_by_name("dest")
+    }
+
+    fn capture_c_instruction_by_name(&self, name: &str) -> Option<&str> {
+        self.instruction_type()
+            .filter(|t| matches!(t, InstructionType::CInstruction))
+            .and_then(|_| {
+                self.instruction
+                    .current
+                    .as_ref()
+                    .and_then(|instruction| {
+                        self.instruction.regex.reg_c.captures(instruction.as_str())
+                    })?
+                    .name(name)
+                    .map(|m| m.as_str())
+            })
+    }
 }
 
 #[cfg(test)]
@@ -639,5 +658,99 @@ mod tests {
 
         // Assert
         assert_eq!(ctx.l_inst_parser.symbol(), Some("LOOP"));
+    }
+
+    #[test]
+    fn dest_for_l_and_a_inst_returns_none() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.l_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.l_inst_parser.dest(), None);
+        assert_eq!(ctx.a_inst_parser.dest(), None);
+    }
+
+    #[test]
+    fn dest_returns_dest_for_first_c_instruction() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.dest(), Some("D"));
+    }
+
+    #[test]
+    fn dest_returns_dest_for_second_c_instruction() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.dest(), Some("D"));
+    }
+
+    #[test]
+    fn dest_returns_none_for_dest_c_instruction() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.dest(), None);
+    }
+
+    #[test]
+    fn dest_returns_two_registers_destination() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.dest(), Some("MD"));
     }
 }
