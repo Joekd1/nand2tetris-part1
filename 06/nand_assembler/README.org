@@ -112,4 +112,16 @@ We can then call captures on =regex= and extract the symbol:
 
 #+end_src
 
+** capture_c_instruction_by_name
+
+This is a helper function that encapsulates getting a capture group from a C instruction using its name.
+The logic is similar and only the name changes. We filter filter the insruction type and based on the result, we exract the capture of the current instruction using the supplied name.
+
+** dest
+
+Returns the destination part of the C instruction by using the previously defined helper function.
+
+
+
+
 
