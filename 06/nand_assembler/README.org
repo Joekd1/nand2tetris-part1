@@ -129,6 +129,15 @@ Returns the computation part of the C instruction by using the previously define
 
 Returns the jump part of the C instruction by using the previously defined helper function.
 
+* Code.rs
+
+This module is responsible for translating symbolic hack mnemonics into their corresponding binary code.
+It implements these methods:
+
+** new
+
+This is the method responsible for constructing an instance of the =Code= struct with hashmaps linking the default mneonics to their corresponding binary value. We chose three distinct hashmaps due to some overlap between the keys, which give different binary results depending if it's a destination, computation or jump operation.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
