@@ -87,6 +87,10 @@ impl Parser {
         self.capture_c_instruction_by_name("comp")
     }
 
+    pub fn jump(&self) -> Option<&str> {
+        self.capture_c_instruction_by_name("jmp")
+    }
+
     fn capture_c_instruction_by_name(&self, name: &str) -> Option<&str> {
         self.instruction_type()
             .filter(|t| matches!(t, InstructionType::CInstruction))
@@ -866,5 +870,71 @@ mod tests {
 
         // Assert
         assert_eq!(ctx.c_inst_parser.comp(), Some("D"));
+    }
+
+    #[test]
+    fn jump_returns_none_for_c_instruction_with_no_jmp() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.jump(), None);
+    }
+
+    #[test]
+    fn jump_returns_unconditional_jmp() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.jump(), Some("JMP"));
+    }
+
+    #[test]
+    fn jump_returns_conditional_jmp() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.jump(), Some("JNEQ"));
     }
 }

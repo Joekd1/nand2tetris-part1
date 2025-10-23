@@ -125,6 +125,10 @@ Returns the destination part of the C instruction by using the previously define
 
 Returns the computation part of the C instruction by using the previously defined helper function.
 
+** jump
+
+Returns the jump part of the C instruction by using the previously defined helper function.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
