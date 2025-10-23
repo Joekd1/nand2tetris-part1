@@ -83,6 +83,10 @@ impl Parser {
         self.capture_c_instruction_by_name("dest")
     }
 
+    pub fn comp(&self) -> Option<&str> {
+        self.capture_c_instruction_by_name("comp")
+    }
+
     fn capture_c_instruction_by_name(&self, name: &str) -> Option<&str> {
         self.instruction_type()
             .filter(|t| matches!(t, InstructionType::CInstruction))
@@ -752,5 +756,115 @@ mod tests {
 
         // Assert
         assert_eq!(ctx.c_inst_parser.dest(), Some("MD"));
+    }
+
+    #[test]
+    fn comp_returns_a_binary_computation() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.comp(), Some("M-D"));
+    }
+
+    #[test]
+    fn comp_returns_a_unary_computation() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.comp(), Some("M"));
+    }
+
+    #[test]
+    fn comp_returns_an_unconditional_jump_computation() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.comp(), Some("0"));
+    }
+
+    #[test]
+    fn comp_returns_in_c_instruction_with_two_destinations() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.comp(), Some("D+M"));
+    }
+
+    #[test]
+    fn comp_returns_conditional_jump_computation() {
+        //Arrange
+        let mut ctx = setup();
+
+        // Apply
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        ctx.c_inst_parser
+            .advance()
+            .expect("Error while calling advance");
+
+        // Assert
+        assert_eq!(ctx.c_inst_parser.comp(), Some("D"));
     }
 }

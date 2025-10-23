@@ -121,6 +121,10 @@ The logic is similar and only the name changes. We filter the instruction type a
 
 Returns the destination part of the C instruction by using the previously defined helper function.
 
+** comp
+
+Returns the computation part of the C instruction by using the previously defined helper function.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
