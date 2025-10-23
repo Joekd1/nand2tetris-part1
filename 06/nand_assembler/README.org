@@ -121,6 +121,10 @@ The logic is similar and only the name changes. We filter filter the insruction 
 
 Returns the destination part of the C instruction by using the previously defined helper function.
 
+** comp
+
+Returns the computation part of the C instruction by using the previously defined helper function.
+
 
 
 
