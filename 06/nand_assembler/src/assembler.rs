@@ -7,6 +7,7 @@ pub struct Assembler {
 }
 
 mod parser;
+mod code;
 
 impl Assembler {
     pub fn build(mut args: impl Iterator<Item = String>) -> Result<Self, Box<dyn Error>> {
