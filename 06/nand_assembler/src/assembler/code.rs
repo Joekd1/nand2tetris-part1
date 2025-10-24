@@ -90,6 +90,10 @@ impl Code {
     pub fn comp(&self, comp: &str) -> Option<&str> {
         self.comp_map.get(comp).map(|s| s.as_str())
     }
+
+    pub fn jump(&self, jump: &str) -> Option<&str> {
+        self.jump_map.get(jump).map(|s| s.as_str())
+    }
 }
 
 #[cfg(test)]
@@ -190,5 +194,25 @@ mod tests {
         assert_eq!(code.comp("Z+A"), None);
         assert_eq!(code.comp("D-C"), None);
         assert_eq!(code.comp("a"), None);
+    }
+
+    #[test]
+    fn jump_with_null_value() {
+        let code = Code::new();
+        assert_eq!(code.jump("null"), Some("000"));
+    }
+
+    #[test]
+    fn jump_with_nonconditional_jump() {
+        let code = Code::new();
+        assert_eq!(code.jump("JMP"), Some("111"));
+    }
+
+    #[test]
+    fn jump_with_conditional_jumps() {
+        let code = Code::new();
+        assert_eq!(code.jump("JGT"), Some("001"));
+        assert_eq!(code.jump("JLE"), Some("110"));
+        assert_eq!(code.jump("JEQ"), Some("010"));
     }
 }
