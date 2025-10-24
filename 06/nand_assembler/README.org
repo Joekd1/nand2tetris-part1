@@ -138,6 +138,14 @@ It implements these methods:
 
 This is the method responsible for constructing an instance of the =Code= struct with hashmaps linking the default mneonics to their corresponding binary value. We chose three distinct hashmaps due to some overlap between the keys, which give different binary results depending if it's a destination, computation or jump operation.
 
+** canonicalize_dest
+
+Responsible for canonizing the destination string, so that it gives the same string no matter what order the individual destinations are in. 
+
+** dest
+
+Returns the binary code of the destination mnemonic.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
