@@ -150,6 +150,10 @@ Returns the binary code of the destination mnemonic.
 
 Returns the binary code of the computation mnemonic.
 
+** jump
+
+Returns the binary code of the jump mnemonic.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:
