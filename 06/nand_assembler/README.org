@@ -146,6 +146,10 @@ Responsible for canonizing the destination string, so that it gives the same str
 
 Returns the binary code of the destination mnemonic.
 
+** comp
+
+Returns the binary code of the computation mnemonic.
+
 * instruction.rs
 
 Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= holds these fields:

@@ -86,9 +86,11 @@ impl Code {
         let canonical_dest = Code::canonicalize_dest(dest);
         self.dest_map.get(&canonical_dest).map(|s| s.as_str())
     }
+
+    pub fn comp(&self, comp: &str) -> Option<&str> {
+        self.comp_map.get(comp).map(|s| s.as_str())
+    }
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -147,5 +149,46 @@ mod tests {
         assert_eq!(code.dest("AZD"), None);
         assert_eq!(code.dest("a"), None);
         assert_eq!(code.dest(""), None);
+    }
+
+    #[test]
+    fn comp_for_constsants() {
+        let code = Code::new();
+
+        assert_eq!(code.comp("0"), Some("0101010"));
+        assert_eq!(code.comp("1"), Some("0111111"));
+        assert_eq!(code.comp("-1"), Some("0111010"));
+    }
+    #[test]
+    fn comp_for_single_registers() {
+        let code = Code::new();
+        assert_eq!(code.comp("D"), Some("0001100"));
+        assert_eq!(code.comp("A"), Some("0110000"));
+        assert_eq!(code.comp("M"), Some("1110000"));
+    }
+
+    #[test]
+    fn comp_for_unary_operations() {
+        let code = Code::new();
+        assert_eq!(code.comp("!D"), Some("0001101"));
+        assert_eq!(code.comp("-A"), Some("0110011"));
+        assert_eq!(code.comp("!M"), Some("1110001"));
+    }
+
+    #[test]
+    fn comp_for_binary_operations() {
+        let code = Code::new();
+        assert_eq!(code.comp("D+A"), Some("0000010"));
+        assert_eq!(code.comp("D-M"), Some("1010011"));
+        assert_eq!(code.comp("M-D"), Some("1000111"));
+        assert_eq!(code.comp("D&M"), Some("1000000"));
+    }
+
+    #[test]
+    fn comp_for_invalid_input_returns_none() {
+        let code = Code::new();
+        assert_eq!(code.comp("Z+A"), None);
+        assert_eq!(code.comp("D-C"), None);
+        assert_eq!(code.comp("a"), None);
     }
 }
