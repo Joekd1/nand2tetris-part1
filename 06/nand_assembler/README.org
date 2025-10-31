@@ -79,8 +79,7 @@ Returns true if there are more lines in the file. Initially it should return =fa
 
 ** advance
 
-If has_more_lines is false then we have nothing more to do, we return an Error. Otherwise, we increment our position in the file and if it's a valid instruction (for now it's just any line that is not empty and is not a comment) we increment =current_line= and update =instruction.current=.
-
+If =has_more_lines= is false then we have nothing more to do, we return an Error. Otherwise, we increment our position in the file. If the instruction is valid then we update =instruction.current=. The =current_line= is only incremented in the case of an A or C instruction.
 
 ** instruction_type
 
