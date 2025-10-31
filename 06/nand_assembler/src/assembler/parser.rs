@@ -2,7 +2,7 @@ use instruction::{Instruction, InstructionType};
 use std::error::Error;
 use std::fs;
 
-mod instruction;
+pub mod instruction;
 
 pub struct Parser {
     pub contents: Vec<String>,
