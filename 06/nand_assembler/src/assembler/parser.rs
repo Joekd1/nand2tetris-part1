@@ -35,17 +35,24 @@ impl Parser {
     }
 
     pub fn advance(&mut self) -> Result<(), Box<dyn Error>> {
-        self.has_more_lines()
-            .then(|| {
-                self.file_index += 1;
-                self.contents.get(self.file_index as usize)
-            })
-            .ok_or_else(|| Box::<dyn Error>::from("You reached the end of the file"))?
+        if !self.has_more_lines() {
+            return Err("You reached the end of the file".into());
+        }
+
+        self.file_index += 1;
+
+        self.instruction.current = self
+            .contents
+            .get(self.file_index as usize)
             .filter(|i| !i.is_empty() && !i.starts_with("//"))
-            .map(|valid_instruction| {
-                self.current_line += 1;
-                self.instruction.current = Some(valid_instruction.clone())
-            });
+            .map(|s| s.clone());
+
+        if matches!(
+            self.instruction_type(),
+            Some(InstructionType::AInstruction | InstructionType::CInstruction)
+        ) {
+            self.current_line += 1;
+        }
 
         Ok(())
     }
@@ -304,29 +311,6 @@ mod tests {
 
         // Assert
         assert_eq!(ctx.default_with_comments.instruction.current, None);
-    }
-
-    #[test]
-    fn current_instruction_does_not_change_after_comments() {
-        // Arrange
-        let mut ctx = setup();
-
-        //Apply
-        ctx.default_with_comments
-            .advance()
-            .expect("Error while calling advance");
-        ctx.default_with_comments
-            .advance()
-            .expect("Error while calling advance");
-        ctx.default_with_comments
-            .advance()
-            .expect("Error while calling advance");
-
-        // Assert
-        assert_eq!(
-            ctx.default_with_comments.instruction.current,
-            Some("@A".to_string())
-        );
     }
 
     #[test]
