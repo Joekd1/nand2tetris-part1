@@ -9,4 +9,8 @@ fn main() {
         eprintln!("{err}");
         process::exit(1);
     });
+
+    if let Err(err) = assembler.run() {
+        eprintln!("{err}");
+    }
 }

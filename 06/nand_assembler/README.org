@@ -12,7 +12,10 @@
 
 The assembler crate defines the =Assembler= struct with the following fields:
 
+- file_path: Keeps track of the original file path.
 - parser: Contains an instance of the Parser.
+- code: Contains an instance of Code.
+- binary: A vec containing the results of the assembly process.
 
 It also defines these methods:
 
@@ -20,6 +23,30 @@ It also defines these methods:
 
 Creating an instance of the =Assembler= involves reading an env variable for the source file, and checking if the file exists.
 This operation can fail for a variety of reasons (For example file not existing or wrong extension), so the method returns a =Result= with a =Box<dyn Error>= variant. The error is propagated and handled in =main.rs= where we exist the program when an Error variant is encountered. There's no reason to continue if we can't successfully create an instance of the Assembler.
+
+** run
+
+Handles the main logic of the assembly process. We loop over =advance= and assemble each instruction based on its type. The resulting =binary= is then written to a file.
+
+** assemble_a_instruction
+
+Uses the =parser= to extract the =symbol=, which in our case now is a digit. The symbol is converted to binary and added to the =binary= vector.
+
+** convert_number_to_binary
+
+Converts the decimal number to binary and adds the necessary padding to make a 16-bit binary digit.
+
+** assemble_c_instruction
+
+Uses the =parser= and =code= to extract the computation, destination, and jump symbols, and translate them into their binary value. The resulting binary digit is added to the =binary= struct.
+
+** write_binary_to_file
+
+Responsible for writing the resulting =binary= vec to a file. We use a =BufWriter= to make the writing process more efficient.
+
+** get_output_path
+
+Returns a =PathBuf= by changing the extension of the =file_path=. This keeps the original path and changes only the extension.
 
 * Parser.rs
 
