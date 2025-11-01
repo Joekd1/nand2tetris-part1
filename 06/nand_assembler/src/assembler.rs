@@ -5,16 +5,20 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
+use symbol_table::SymbolTable;
 
 pub struct Assembler {
     file_path: String,
+    symbol_table: SymbolTable,
     parser: Parser,
     code: Code,
+    next_address: i32,
     binary: Vec<String>,
 }
 
 mod code;
 mod parser;
+mod symbol_table;
 
 impl Assembler {
     pub fn build(mut args: impl Iterator<Item = String>) -> Result<Self, Box<dyn Error>> {
@@ -32,19 +36,28 @@ impl Assembler {
                 .ok_or("Wrong file extension")
         })?;
 
+        let symbol_table = SymbolTable::new();
         let parser = Parser::build(&file_path)?;
         let code = Code::new();
         let binary: Vec<String> = Vec::new();
+        let next_address = 16;
 
         Ok(Assembler {
             file_path,
+            symbol_table,
             parser,
             code,
+            next_address,
             binary,
         })
     }
 
     pub fn run(&mut self) -> Result<(), Box<dyn Error>> {
+        self.build_symbol_table()?;
+
+	self.parser.file_index = -1;
+	self.parser.current_line = -1;
+
         while let Ok(()) = self.parser.advance() {
             if let Some(inst_type) = self.parser.instruction_type() {
                 match inst_type {
@@ -59,14 +72,41 @@ impl Assembler {
         Ok(())
     }
 
+    fn build_symbol_table(&mut self) -> Result<(), Box<dyn Error>> {
+        while let Ok(()) = self.parser.advance() {
+            self.parser
+                .instruction_type()
+                .filter(|t| matches!(t, InstructionType::LInstruction))
+                .and_then(|_| self.parser.symbol())
+                .map(|symbol| {
+                    self.symbol_table
+                        .add_entry(symbol, self.parser.current_line + 1)
+                });
+        }
+        Ok(())
+    }
+
     fn assemble_a_instruction(&mut self) {
-        if let Some(binary_part) = self
-            .parser
-            .symbol()
-            .and_then(|s| s.parse::<i32>().ok())
+        if let Some(binary_part) = self.parser.symbol()
+	    .map(|s| s.to_string())
+            .and_then(|s| self.process_symbol(&s))
             .map(|n| Assembler::convert_number_to_binary(&n))
         {
             self.binary.push(format!("0{}", binary_part));
+        }
+    }
+
+    fn process_symbol(&mut self, s: &str) -> Option<i32> {
+        if let Ok(n) = s.parse::<i32>() {
+            return Some(n);
+        }
+        if self.symbol_table.contains(s) {
+            self.symbol_table.get_address(s)
+        } else {
+            let address = self.next_address;
+            self.symbol_table.add_entry(s, address);
+            self.next_address += 1;
+            Some(address)
         }
     }
 
