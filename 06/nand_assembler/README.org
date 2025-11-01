@@ -7,6 +7,7 @@
 - *Parser.rs:* Reads the input file and offers a convenient way to skip through the comments and bank lines, breaking instructions into their main components.
 - *instruction.rs:* Keeps track of the current instruction and the parsing Regex.
 - *Code.rs:* Translates symbolic Hack mnemonics into their binary codes.
+- *symbol_table.rs:* Keeps track of symbolic references and their values.
 
 * Assembler.rs
 
@@ -15,6 +16,8 @@ The assembler crate defines the =Assembler= struct with the following fields:
 - file_path: Keeps track of the original file path.
 - parser: Contains an instance of the Parser.
 - code: Contains an instance of Code.
+- symbol_table: Holds an instance of the =SymbolTable=.
+- next_address: Holds the value of the next available address for non-builtin variables.
 - binary: A vec containing the results of the assembly process.
 
 It also defines these methods:
@@ -26,11 +29,19 @@ This operation can fail for a variety of reasons (For example file not existing 
 
 ** run
 
-Handles the main logic of the assembly process. We loop over =advance= and assemble each instruction based on its type. The resulting =binary= is then written to a file.
+Handles the main logic of the assembly process. We first call =build_symbol_table= to add all the symbolic L instruction to =symbol_table=. Then, after resetting the relevant parser fields, we loop over =advance= and assemble each instruction based on its type. The resulting =binary= is then written to a file.
+
+** build_symbol_table
+
+Performs the first pass of the assembly process that handles L instructions. Each L instruction symbol is added to the =symbol_table= with the next line number as its value.
 
 ** assemble_a_instruction
 
-Uses the =parser= to extract the =symbol=, which in our case now is a digit. The symbol is converted to binary and added to the =binary= vector.
+Uses the =parser= to extract the =symbol=, which can be either a digit or a variable name. The symbol is then passed to =process_symbol= and the resulting digit is converted to binary and added to the =binary= vector.
+
+** process_symbol
+
+Responsible for handling possible variables. if the symbol is a digit then we have nothing to do, we just return it. If it's not a digit then it's a variable. If it's the first time we encounter said variable then it's not in the =symbol_table=. We add it and then return its address. If the symbol already exists then we just return its address using =get_address=.
 
 ** convert_number_to_binary
 
@@ -192,3 +203,23 @@ Defines the =Instruction= struct and the =InstructionType= enum. =Instruction= h
 ** new
 
 Constructs an instance of the =Instruction= struct.
+
+* symbol_table.rs
+
+Defines the =SymbolTable= struct that contains a hashmap linking Hack symbols to their value. It defines these methods:
+
+** new
+
+Constructs a new instance of =SymbolTable= containing the default Hack symbols as per the language spec.
+
+** add_entry
+
+Takes a symbol and an address and adds them to the =map=.
+
+** contains
+
+Returns true is the symbol exists in the table.
+
+** get_address
+
+Returns the address that corresponds to the given symbol.
